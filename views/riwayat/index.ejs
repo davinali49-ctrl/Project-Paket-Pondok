@@ -1,0 +1,52 @@
+<%- include('../partials/head', { judul: 'Riwayat Aktivitas' }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container">
+    <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Riwayat Aktivitas Petugas</h3>
+        </div>
+
+        <form method="GET" action="/riwayat" class="filter-form">
+            <input type="text" name="q" placeholder="Cari aktivitas, keterangan, atau petugas..." value="<%= q %>">
+            <button type="submit" class="btn btn-primary">Cari</button>
+            <a href="/riwayat" class="btn btn-secondary">Reset</a>
+        </form>
+
+        <div class="result-info"><%= `Menampilkan ${riwayat.length} aktivitas.` %></div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Waktu</th>
+                    <th>Petugas</th>
+                    <th>Aktivitas</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (riwayat.length > 0) { %>
+                    <% riwayat.forEach(item => { %>
+                        <tr>
+                            <td><%= formatTanggalWaktu(item.tanggal_aktivitas) %></td>
+                            <td><strong><%= item.nama_petugas %></strong></td>
+                            <td><span class="badge badge-primary"><%= item.aktivitas %></span></td>
+                            <td><%= item.keterangan || '-' %></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #888;">Belum ada data aktivitas.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

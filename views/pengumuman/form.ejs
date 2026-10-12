@@ -1,0 +1,45 @@
+<%- include('../partials/head', { judul: 'Tambah Pengumuman' }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3>Tambah Pengumuman Baru</h3>
+            <a href="/pengumuman" class="btn btn-secondary">← Kembali</a>
+        </div>
+
+        <% if (error) { %>
+            <div class="alert alert-error"><%= error %></div>
+        <% } %>
+
+        <% const isi = nilai || {}; %>
+
+        <form method="POST" action="/pengumuman">
+            <div class="form-group">
+                <label for="id_paket">Paket <span style="color:#dc3545">*</span></label>
+                <select id="id_paket" name="id_paket" required>
+                    <option value="">— Pilih Paket —</option>
+                    <% paket.forEach(p => { %>
+                        <option value="<%= p.id_paket %>" <%= String(isi.id_paket) === String(p.id_paket) ? 'selected' : '' %>>
+                            <%= p.nama_pada_paket %> <%= p.no_resi ? '• ' + p.no_resi : '' %>
+                            <% if (p.nama_santri) { %> • <%= p.nama_santri %><% } %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="isi_pengumuman">Isi Pengumuman <span style="color:#dc3545">*</span></label>
+                <textarea id="isi_pengumuman" name="isi_pengumuman" rows="4" required placeholder="Contoh: Paket Muhammad Fikri sudah datang dan dapat diambil di sekretariat."><%= isi.isi_pengumuman || '' %></textarea>
+            </div>
+
+            <div class="actions" style="margin-top: 10px;">
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                <a href="/pengumuman" class="btn btn-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

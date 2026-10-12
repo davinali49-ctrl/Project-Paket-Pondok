@@ -65,10 +65,20 @@ status pengambilan, serta melakukan tambah/ubah/hapus paket dan pengambilan.
 
 - Login & logout petugas (sesi + bcrypt)
 - Dashboard daftar paket masuk dengan status pengambilan
+- Pencarian & filter dashboard (nama paket, no. resi, santri, asrama, status, ekspedisi)
+- Identifikasi penerima (menghubungkan paket tanpa santri ke santri pemilik)
+- Batal ambil (membatalkan status pengambilan)
 - Tambah / ubah / hapus paket
 - Tandai paket sudah diambil (mandiri / diwakilkan)
-- Kelola data santri
-- Pencatatan riwayat aktivitas petugas (`riwayat_aktivitas`)
+- Kelola data santri & asrama (tabel master)
+- Modul pengumuman paket
+- Halaman riwayat aktivitas petugas (`riwayat_aktivitas`)
+- Normalisasi relasi: `santri.id_asrama` & `paket.id_ekspedisi` (foreign key)
+
+> **Migrasi database lama:** jika sudah punya database versi lama (kolom `asrama`/`ekspedisi`
+> bertipe varchar), jalankan `database/migrasi_normalisasi.sql` sekali setelah *backup*. Script
+> ini akan mengisi tabel master `asrama` & `ekspedisi` dari data lama, memetakan relasi,
+> menambahkan foreign key, lalu menghapus kolom teks lama.
 
 ## Struktur Utama
 
@@ -77,9 +87,13 @@ app.js                  Entry point & konfigurasi Express
 config/database.js      Koneksi MySQL (dibaca dari .env)
 middleware/auth.js      Middleware proteksi halaman (requireLogin)
 routes/auth.js          Login & logout
-routes/paket.js         CRUD paket + tandai pengambilan
-routes/santri.js        CRUD santri
+routes/paket.js         CRUD paket + tandai pengambilan, identifikasi, batal ambil
+routes/santri.js        CRUD santri (relasi asrama)
+routes/pengumuman.js    CRUD pengumuman paket
+routes/riwayat.js       Riwayat aktivitas petugas
 utils/aktivitas.js      Pencatat riwayat aktivitas
 views/                  Template EJS
-database/schema.sql     Skema database
+database/schema.sql     Skema database (struktur ternormalisasi)
+database/migrasi_normalisasi.sql  Migrasi database lama ke struktur FK
+reset_password.js       CLI pembuat/reset akun petugas
 ```

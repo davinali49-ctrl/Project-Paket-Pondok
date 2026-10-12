@@ -1,0 +1,65 @@
+<%- include('../partials/head', { judul: 'Pengumuman' }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container">
+    <% if (msg) { %>
+        <div class="alert alert-success"><%= msg %></div>
+    <% } %>
+    <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Daftar Pengumuman Paket</h3>
+            <a href="/pengumuman/tambah" class="btn btn-primary">+ Tambah Pengumuman</a>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Paket</th>
+                    <th>Santri Pemilik</th>
+                    <th>Isi Pengumuman</th>
+                    <th>Tanggal</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (pengumuman.length > 0) { %>
+                    <% pengumuman.forEach(item => { %>
+                        <tr>
+                            <td>
+                                <strong><%= item.nama_pada_paket %></strong>
+                                <% if (item.no_resi) { %><br><span class="text-muted"><%= item.no_resi %></span><% } %>
+                            </td>
+                            <td>
+                                <% if (item.nama_santri) { %>
+                                    <%= item.nama_santri %> (<%= item.nama_asrama %>)
+                                <% } else { %>
+                                    <span class="text-muted">Belum Terhubung</span>
+                                <% } %>
+                            </td>
+                            <td><%= item.isi_pengumuman %></td>
+                            <td><%= formatTanggalWaktu(item.tanggal_pengumuman) %></td>
+                            <td>
+                                <div class="actions">
+                                    <form method="POST" action="/pengumuman/<%= item.id_pengumuman %>/hapus" onsubmit="return confirm('Hapus pengumuman ini?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #888;">Belum ada pengumuman.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

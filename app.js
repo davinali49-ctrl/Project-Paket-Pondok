@@ -7,6 +7,8 @@ const db = require('./config/database'); // Import koneksi MySQL
 const authRoutes = require('./routes/auth');
 const paketRoutes = require('./routes/paket');
 const santriRoutes = require('./routes/santri');
+const pengumumanRoutes = require('./routes/pengumuman');
+const riwayatRoutes = require('./routes/riwayat');
 const { requireLogin } = require('./middleware/auth');
 
 const app = express();
@@ -53,9 +55,11 @@ app.get('/', (req, res) => {
 // Route Auth (Login & Logout)
 app.use('/', authRoutes);
 
-// Route Modul Paket & Santri
+// Route Modul Paket, Santri, Pengumuman & Riwayat
 app.use('/', paketRoutes);
 app.use('/', santriRoutes);
+app.use('/', pengumumanRoutes);
+app.use('/', riwayatRoutes);
 
 // Route Dashboard - Menampilkan Daftar Paket Masuk (dengan pencarian & filter)
 app.get('/dashboard', requireLogin, async (req, res) => {

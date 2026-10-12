@@ -45,7 +45,7 @@
                         <option value="">— Belum terhubung —</option>
                         <% santri.forEach(s => { %>
                             <option value="<%= s.id_santri %>" <%= String(isi.id_santri) === String(s.id_santri) ? 'selected' : '' %>>
-                                <%= s.nama_santri %> (<%= s.asrama %>)
+                                <%= s.nama_santri %> (<%= s.nama_asrama %>)
                             </option>
                         <% }) %>
                     </select>
