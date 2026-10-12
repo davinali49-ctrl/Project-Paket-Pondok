@@ -6,9 +6,21 @@
     <title>Login - Sistem Pengelolaan Paket Santri</title>
 
     <style>
+        /* ---- Palet Warna (The Green Palette) ---- */
+        :root {
+            --emerald: #14452F;
+            --green: #23884D;
+            --gold: #D4AF37;
+            --body-bg: #F4F7F4;
+            --card-bg: #FFFFFF;
+            --text: #2B2B2B;
+            --muted: #6C7A72;
+            --border: #DCE5DE;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
+            background-color: var(--body-bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,18 +28,25 @@
             margin: 0;
         }
         .login-card {
-            background: #ffffff;
+            background: var(--card-bg);
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 20px rgba(20, 69, 47, 0.15);
             width: 100%;
             max-width: 360px;
+            border-top: 4px solid var(--emerald);
         }
         .login-card h2 {
             margin-top: 0;
-            margin-bottom: 20px;
+            margin-bottom: 6px;
             text-align: center;
-            color: #333;
+            color: var(--emerald);
+        }
+        .login-subtitle {
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin: 0 0 20px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -36,27 +55,36 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-            color: #555;
+            color: #45534B;
         }
         .form-group input {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
             border-radius: 5px;
             box-sizing: border-box;
+            color: var(--text);
+            font-family: inherit;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(35, 136, 77, 0.15);
         }
         .btn-login {
             width: 100%;
             padding: 10px;
-            background-color: #0d6efd;
+            background-color: var(--green);
             border: none;
             color: white;
             font-weight: bold;
             border-radius: 5px;
             cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
         }
         .btn-login:hover {
-            background-color: #0b5ed7;
+            background-color: var(--emerald);
         }
         .alert-error {
             background-color: #f8d7da;
@@ -73,6 +101,7 @@
 
 <div class="login-card">
     <h2>Login Petugas</h2>
+    <p class="login-subtitle">Sistem Pengelolaan Paket Santri</p>
 
     <% if (error) { %>
         <div class="alert-error"><%= error === '2' ? 'Silakan login terlebih dahulu.' : 'Username atau password salah!' %></div>

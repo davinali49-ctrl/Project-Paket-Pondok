@@ -5,38 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= judul %> - Sistem Pengelolaan Paket Santri</title>
     <style>
+        /* ---- Palet Warna (The Green Palette) ---- */
+        :root {
+            --emerald: #14452F;   /* Primary / Dominan (Navbar & Aksen Utama) */
+            --green: #23884D;     /* Secondary / Aksen (Tombol & Aksi Utama) */
+            --gold: #D4AF37;      /* Highlight / Emas (Badge / Aksen Spesial) */
+            --body-bg: #F4F7F4;   /* Background Body */
+            --card-bg: #FFFFFF;   /* Background Card / Container */
+            --text: #2B2B2B;      /* Text Dark */
+            --muted: #6C7A72;     /* Teks sekunder */
+            --border: #DCE5DE;    /* Garis / border */
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            background-color: #f4f6f9;
+            background-color: var(--body-bg);
+            color: var(--text);
         }
+        h2, h3 { color: var(--emerald); }
         .navbar {
-            background-color: #0d6efd;
+            background-color: var(--emerald);
             color: white;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(20, 69, 47, 0.25);
         }
-        .navbar h1 { margin: 0; font-size: 20px; }
+        .navbar h1 { margin: 0; font-size: 20px; color: #fff; }
         .nav-links { display: flex; align-items: center; gap: 14px; }
         .nav-link { color: #fff; text-decoration: none; font-weight: 600; }
-        .nav-link:hover { text-decoration: underline; }
+        .nav-link:hover { color: var(--gold); text-decoration: underline; }
         .btn-logout {
-            color: white;
+            color: var(--text);
             text-decoration: none;
-            background: #dc3545;
+            background: var(--gold);
             padding: 8px 15px;
             border-radius: 5px;
             font-weight: bold;
         }
+        .btn-logout:hover { opacity: 0.9; }
         .container { padding: 30px; }
         .card {
-            background: white;
+            background: var(--card-bg);
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(20, 69, 47, 0.08);
             margin-bottom: 20px;
+            border-top: 3px solid var(--green);
         }
         .card-header {
             display: flex;
@@ -52,13 +68,13 @@
         th, td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid var(--border);
         }
         th {
-            background-color: #f8f9fa;
-            color: #495057;
+            background-color: #EAF2EC;
+            color: var(--emerald);
         }
-        tr:hover { background-color: #f8f9fa; }
+        tr:hover { background-color: #F1F7F3; }
         .badge {
             padding: 6px 12px;
             border-radius: 4px;
@@ -67,9 +83,9 @@
             color: white;
             display: inline-block;
         }
-        .badge-primary { background-color: #0d6efd; }
-        .badge-success { background-color: #198754; }
-        .badge-warning { background-color: #ffc107; color: #000; }
+        .badge-primary { background-color: var(--emerald); }
+        .badge-success { background-color: var(--green); }
+        .badge-warning { background-color: var(--gold); color: var(--text); }
         .btn {
             display: inline-block;
             padding: 7px 14px;
@@ -79,49 +95,61 @@
             font-size: 13px;
             border: none;
             cursor: pointer;
+            transition: opacity .15s ease, transform .05s ease;
         }
-        .btn-primary { background-color: #0d6efd; color: white; }
-        .btn-success { background-color: #198754; color: white; }
-        .btn-warning { background-color: #ffc107; color: #000; }
-        .btn-danger { background-color: #dc3545; color: white; }
-        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-primary { background-color: var(--green); color: white; }
+        .btn-success { background-color: var(--emerald); color: white; }
+        .btn-warning { background-color: var(--gold); color: var(--text); }
+        .btn-danger { background-color: #B23A3A; color: white; }
+        .btn-secondary { background-color: #6C7A72; color: white; }
         .btn-sm { padding: 4px 10px; font-size: 12px; }
         .btn:hover { opacity: 0.9; }
+        .btn:active { transform: translateY(1px); }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #45534B; }
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
             border-radius: 5px;
             box-sizing: border-box;
             font-family: inherit;
+            color: var(--text);
+            background: #fff;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(35, 136, 77, 0.15);
         }
         .form-row { display: flex; gap: 14px; }
         .form-row .form-group { flex: 1; }
         .alert { padding: 12px; border-radius: 5px; margin-bottom: 15px; font-size: 14px; }
-        .alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-        .alert-error { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
-        .text-muted { color: #888; }
+        .alert-success { background-color: #E3F1E8; color: var(--emerald); border: 1px solid #BFDCC8; }
+        .alert-error { background-color: #F8D7DA; color: #842029; border: 1px solid #F5C2C7; }
+        .text-muted { color: var(--muted); }
         .actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(20, 69, 47, 0.55);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
         .modal {
-            background: white;
+            background: var(--card-bg);
             border-radius: 8px;
             padding: 24px;
             width: 90%;
             max-width: 420px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            border-top: 3px solid var(--green);
         }
         .modal h3 { margin-top: 0; }
         .filter-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
@@ -129,16 +157,24 @@
             flex: 1;
             min-width: 180px;
             padding: 8px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
             border-radius: 5px;
+            color: var(--text);
         }
         .filter-form select {
             padding: 8px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
             border-radius: 5px;
             background: white;
+            color: var(--text);
         }
-        .result-info { color: #666; font-size: 13px; margin-bottom: 10px; }
+        .filter-form input[type="text"]:focus,
+        .filter-form select:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(35, 136, 77, 0.15);
+        }
+        .result-info { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
     </style>
 </head>
 <body>

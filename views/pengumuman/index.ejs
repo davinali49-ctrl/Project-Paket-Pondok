@@ -10,7 +10,7 @@
         <div class="card-header">
             <h3>Pengumuman Paket Belum Diambil</h3>
             <div style="display:flex; gap:8px; align-items:center;">
-                <span id="status-salin" style="color:#198754; font-size:13px;"></span>
+                <span id="status-salin" style="color:#23884D; font-size:13px;"></span>
                 <button type="button" class="btn btn-primary" id="btn-salin" onclick="salinDaftar()"
                         <%= paket.length === 0 ? 'disabled' : '' %>>Salin Daftar (WhatsApp)</button>
             </div>
@@ -133,9 +133,9 @@
         ta.select();
         try {
             document.execCommand('copy');
-            tampilStatusPesan('✓ Daftar berhasil disalin!', '#198754');
+            tampilStatusPesan('✓ Daftar berhasil disalin!', '#23884D');
         } catch (e) {
-            tampilStatusPesan('Gagal menyalin, salin manual dari kotak teks di bawah.', '#dc3545');
+            tampilStatusPesan('Gagal menyalin, salin manual dari kotak teks di bawah.', '#B23A3A');
         }
         document.body.removeChild(ta);
     }
@@ -143,12 +143,12 @@
     function salinDaftar() {
         const text = document.getElementById('teks-salin').textContent;
         if (!text.trim()) {
-            tampilStatusPesan('Tidak ada paket untuk disalin.', '#dc3545');
+            tampilStatusPesan('Tidak ada paket untuk disalin.', '#B23A3A');
             return;
         }
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text)
-                .then(() => tampilStatusPesan('✓ Daftar berhasil disalin!', '#198754'))
+                .then(() => tampilStatusPesan('✓ Daftar berhasil disalin!', '#23884D'))
                 .catch(() => salinFallback(text));
         } else {
             salinFallback(text);

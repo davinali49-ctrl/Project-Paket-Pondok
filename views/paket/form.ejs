@@ -21,7 +21,7 @@
                     <input type="text" id="no_resi" name="no_resi" value="<%= isi.no_resi || '' %>" placeholder="Contoh: JP123456789">
                 </div>
                 <div class="form-group">
-                    <label for="ekspedisi">Ekspedisi <span style="color:#dc3545">*</span></label>
+                    <label for="ekspedisi">Ekspedisi <span style="color:#B23A3A">*</span></label>
                     <select id="ekspedisi" name="ekspedisi" required>
                         <option value="">— Pilih Ekspedisi —</option>
                         <% ekspedisi.forEach(e => { %>
@@ -34,7 +34,7 @@
             </div>
 
             <div class="form-group">
-                <label for="nama_pada_paket">Nama pada Paket <span style="color:#dc3545">*</span></label>
+                <label for="nama_pada_paket">Nama pada Paket <span style="color:#B23A3A">*</span></label>
                 <input type="text" id="nama_pada_paket" name="nama_pada_paket" value="<%= isi.nama_pada_paket || '' %>" required placeholder="Nama penerima yang tertulis pada paket">
             </div>
 
@@ -51,7 +51,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="tanggal_diterima">Tanggal Diterima <span style="color:#dc3545">*</span></label>
+                    <label for="tanggal_diterima">Tanggal Diterima <span style="color:#B23A3A">*</span></label>
                     <input type="datetime-local" id="tanggal_diterima" name="tanggal_diterima" value="<%= toDatetimeLocal(isi.tanggal_diterima) %>" required>
                 </div>
             </div>
