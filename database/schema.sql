@@ -1,7 +1,8 @@
 -- ============================================
--- Skema Database Sistem Pengelolaan Paket Santri
+-- Skema Database Sistem Penerimaan dan Pengambilan Paket Santri
 -- Database  : db_paket_santri
 -- DBMS      : MySQL / MariaDB
+-- Struktur mengikuti Laporan Analisis Kebutuhan Data Akademik
 -- Cara pakai: mysql -u root -p < database/schema.sql
 -- ============================================
 
@@ -12,7 +13,7 @@ CREATE DATABASE IF NOT EXISTS `db_paket_santri`
 USE `db_paket_santri`;
 
 -- ------------------------------------------------------------
--- Tabel referensi & master
+-- Entitas master
 -- ------------------------------------------------------------
 
 CREATE TABLE `asrama` (
@@ -38,16 +39,18 @@ CREATE TABLE `petugas` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- ------------------------------------------------------------
+-- Entitas transaksi
+-- ------------------------------------------------------------
+
 CREATE TABLE `santri` (
   `id_santri` int(11) NOT NULL AUTO_INCREMENT,
   `nama_santri` varchar(100) NOT NULL,
-  `asrama` varchar(50) NOT NULL,
-  PRIMARY KEY (`id_santri`)
+  `id_asrama` int(11) NOT NULL,
+  PRIMARY KEY (`id_santri`),
+  KEY `id_asrama` (`id_asrama`),
+  CONSTRAINT `santri_ibfk_1` FOREIGN KEY (`id_asrama`) REFERENCES `asrama` (`id_asrama`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------------------------------------------
--- Tabel transaksi
--- ------------------------------------------------------------
 
 CREATE TABLE `paket` (
   `id_paket` int(11) NOT NULL AUTO_INCREMENT,
@@ -55,14 +58,16 @@ CREATE TABLE `paket` (
   `nama_pada_paket` varchar(100) NOT NULL,
   `id_santri` int(11) DEFAULT NULL,
   `id_petugas` int(11) NOT NULL,
-  `ekspedisi` varchar(50) NOT NULL,
+  `id_ekspedisi` int(11) NOT NULL,
   `tanggal_diterima` datetime NOT NULL,
   `keterangan` text DEFAULT NULL,
   PRIMARY KEY (`id_paket`),
   KEY `id_santri` (`id_santri`),
   KEY `id_petugas` (`id_petugas`),
+  KEY `id_ekspedisi` (`id_ekspedisi`),
   CONSTRAINT `paket_ibfk_1` FOREIGN KEY (`id_santri`) REFERENCES `santri` (`id_santri`),
-  CONSTRAINT `paket_ibfk_2` FOREIGN KEY (`id_petugas`) REFERENCES `petugas` (`id_petugas`)
+  CONSTRAINT `paket_ibfk_2` FOREIGN KEY (`id_petugas`) REFERENCES `petugas` (`id_petugas`),
+  CONSTRAINT `paket_ibfk_3` FOREIGN KEY (`id_ekspedisi`) REFERENCES `ekspedisi` (`id_ekspedisi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `pengambilan` (

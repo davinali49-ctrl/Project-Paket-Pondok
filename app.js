@@ -57,9 +57,36 @@ app.use('/', authRoutes);
 app.use('/', paketRoutes);
 app.use('/', santriRoutes);
 
-// Route Dashboard - Menampilkan Daftar Paket Masuk
+// Route Dashboard - Menampilkan Daftar Paket Masuk (dengan pencarian & filter)
 app.get('/dashboard', requireLogin, async (req, res) => {
     try {
+        const { q, status, ekspedisi, asrama } = req.query;
+
+        // Bangun kondisi WHERE secara dinamis dengan prepared statement
+        const kondisi = [];
+        const params = [];
+
+        if (q && q.trim()) {
+            const kata = '%' + q.trim().replace(/[\\%_]/g, (m) => '\\' + m) + '%';
+            kondisi.push('(p.no_resi LIKE ? OR p.nama_pada_paket LIKE ? OR s.nama_santri LIKE ? OR a.nama_asrama LIKE ?)');
+            params.push(kata, kata, kata, kata);
+        }
+        if (status === 'belum') kondisi.push('pg.id_pengambilan IS NULL');
+        if (status === 'sudah') kondisi.push('pg.id_pengambilan IS NOT NULL');
+
+        const idEks = Number(ekspedisi);
+        if (Number.isInteger(idEks)) {
+            kondisi.push('p.id_ekspedisi = ?');
+            params.push(idEks);
+        }
+        const idAsr = Number(asrama);
+        if (Number.isInteger(idAsr)) {
+            kondisi.push('a.id_asrama = ?');
+            params.push(idAsr);
+        }
+
+        const whereClause = kondisi.length > 0 ? 'WHERE ' + kondisi.join(' AND ') : '';
+
         // Query paket disertai status pengambilan
         const [daftarPaket] = await db.execute(`
             SELECT
@@ -68,7 +95,8 @@ app.get('/dashboard', requireLogin, async (req, res) => {
                 p.nama_pada_paket,
                 s.id_santri,
                 s.nama_santri,
-                p.ekspedisi AS nama_ekspedisi,
+                a.nama_asrama,
+                e.nama_ekspedisi,
                 p.tanggal_diterima,
                 p.keterangan,
                 pg.nama_pengambil,
@@ -80,15 +108,36 @@ app.get('/dashboard', requireLogin, async (req, res) => {
                 END AS status_paket
             FROM paket p
             LEFT JOIN santri s ON p.id_santri = s.id_santri
+            LEFT JOIN asrama a ON s.id_asrama = a.id_asrama
+            LEFT JOIN ekspedisi e ON p.id_ekspedisi = e.id_ekspedisi
             LEFT JOIN pengambilan pg ON p.id_paket = pg.id_paket
+            ${whereClause}
             ORDER BY p.tanggal_diterima DESC
+        `, params);
+
+        // Data pendukung filter & modal identifikasi penerima
+        const [daftarEkspedisi] = await db.execute(
+            'SELECT id_ekspedisi, nama_ekspedisi FROM ekspedisi ORDER BY nama_ekspedisi ASC'
+        );
+        const [daftarAsrama] = await db.execute(
+            'SELECT id_asrama, nama_asrama FROM asrama ORDER BY nama_asrama ASC'
+        );
+        const [daftarSantri] = await db.execute(`
+            SELECT s.id_santri, s.nama_santri, a.nama_asrama
+            FROM santri s
+            LEFT JOIN asrama a ON s.id_asrama = a.id_asrama
+            ORDER BY s.nama_santri ASC
         `);
 
         // Render views/dashboard.ejs
         res.render('dashboard', {
             nama: req.session.nama_petugas,
             paket: daftarPaket,
-            msg: req.query.msg
+            msg: req.query.msg,
+            filter: { q: q || '', status: status || '', ekspedisi: ekspedisi || '', asrama: asrama || '' },
+            ekspedisi: daftarEkspedisi,
+            asrama: daftarAsrama,
+            santri: daftarSantri
         });
     } catch (error) {
         console.error('Error mengambil data paket:', error);

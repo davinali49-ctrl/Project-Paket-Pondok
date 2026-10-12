@@ -9,18 +9,18 @@ router.use(requireLogin);
 
 const JENIS_PENGAMBILAN = ['AMBIL_SENDIRI', 'DIWAKILKAN'];
 
-// Data pendukung untuk form: daftar santri & ekspedisi yang pernah dipakai
+// Data pendukung untuk form: daftar santri & daftar ekspedisi (tabel master)
 async function dataForm() {
-    const [santri] = await db.execute(
-        'SELECT id_santri, nama_santri, asrama FROM santri ORDER BY nama_santri ASC'
+    const [santri] = await db.execute(`
+        SELECT s.id_santri, s.nama_santri, a.nama_asrama
+        FROM santri s
+        LEFT JOIN asrama a ON s.id_asrama = a.id_asrama
+        ORDER BY s.nama_santri ASC
+    `);
+    const [ekspedisi] = await db.execute(
+        'SELECT id_ekspedisi, nama_ekspedisi FROM ekspedisi ORDER BY nama_ekspedisi ASC'
     );
-    const [daftarEkspedisi] = await db.execute(
-        'SELECT DISTINCT ekspedisi FROM paket ORDER BY ekspedisi ASC'
-    );
-    return {
-        santri,
-        ekspedisi: daftarEkspedisi.map((r) => r.ekspedisi)
-    };
+    return { santri, ekspedisi };
 }
 
 function ambilNilai(body) {
@@ -36,7 +36,7 @@ function ambilNilai(body) {
 
 function cekValidasi(nilai) {
     if (!nilai.nama_pada_paket) return 'Nama pada paket wajib diisi.';
-    if (!nilai.ekspedisi) return 'Nama ekspedisi wajib diisi.';
+    if (!nilai.ekspedisi) return 'Ekspedisi wajib diisi.';
     if (!nilai.tanggal_diterima) return 'Tanggal diterima wajib diisi.';
     return null;
 }
@@ -60,22 +60,23 @@ router.post('/paket', async (req, res) => {
     }
 
     const idSantri = nilai.id_santri ? Number(nilai.id_santri) || null : null;
+    const idEkspedisi = Number(nilai.ekspedisi);
     const [hasil] = await db.execute(
-        `INSERT INTO paket (no_resi, nama_pada_paket, id_santri, id_petugas, ekspedisi, tanggal_diterima, keterangan)
+        `INSERT INTO paket (no_resi, nama_pada_paket, id_santri, id_petugas, id_ekspedisi, tanggal_diterima, keterangan)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
             nilai.no_resi || null,
             nilai.nama_pada_paket,
             idSantri,
             req.session.id_petugas,
-            nilai.ekspedisi,
+            idEkspedisi,
             nilai.tanggal_diterima,
             nilai.keterangan || null
         ]
     );
 
     await logAktivitas(req.session.id_petugas, 'TAMBAH_PAKET',
-        `Menambahkan paket #${hasil.insertId} untuk "${nilai.nama_pada_paket}" (${nilai.ekspedisi})`);
+        `Menambahkan paket #${hasil.insertId} untuk "${nilai.nama_pada_paket}"`);
     res.redirect('/dashboard?msg=' + encodeURIComponent('Paket berhasil ditambahkan.'));
 });
 
@@ -109,15 +110,16 @@ router.post('/paket/:id', async (req, res) => {
     }
 
     const idSantri = nilai.id_santri ? Number(nilai.id_santri) || null : null;
+    const idEkspedisi = Number(nilai.ekspedisi);
     await db.execute(
         `UPDATE paket
-         SET no_resi = ?, nama_pada_paket = ?, id_santri = ?, ekspedisi = ?, tanggal_diterima = ?, keterangan = ?
+         SET no_resi = ?, nama_pada_paket = ?, id_santri = ?, id_ekspedisi = ?, tanggal_diterima = ?, keterangan = ?
          WHERE id_paket = ?`,
         [
             nilai.no_resi || null,
             nilai.nama_pada_paket,
             idSantri,
-            nilai.ekspedisi,
+            idEkspedisi,
             nilai.tanggal_diterima,
             nilai.keterangan || null,
             id
@@ -153,6 +155,35 @@ router.post('/paket/:id/ambil', async (req, res) => {
         }
         throw error;
     }
+});
+
+// Proses Identifikasi Penerima (menghubungkan paket ke santri pemilik)
+router.post('/paket/:id/identifikasi', async (req, res) => {
+    const id = Number(req.params.id);
+    const idSantri = req.body.id_santri ? Number(req.body.id_santri) || null : null;
+
+    if (!Number.isInteger(id) || !idSantri) {
+        return res.redirect('/dashboard?msg=' + encodeURIComponent('Pilih santri terlebih dahulu.'));
+    }
+
+    await db.execute('UPDATE paket SET id_santri = ? WHERE id_paket = ?', [idSantri, id]);
+    await logAktivitas(req.session.id_petugas, 'IDENTIFIKASI_PENERIMA',
+        `Paket #${id} dihubungkan ke santri #${idSantri}`);
+    res.redirect('/dashboard?msg=' + encodeURIComponent('Paket berhasil dihubungkan ke santri.'));
+});
+
+// Proses Batal Pengambilan (DEViasi dari Business Rule 10, keputusan pengguna)
+router.post('/paket/:id/batal-ambil', async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.redirect('/dashboard');
+
+    const [hasil] = await db.execute('DELETE FROM pengambilan WHERE id_paket = ?', [id]);
+    await logAktivitas(req.session.id_petugas, 'BATAL_DIAMBIL', `Membatalkan status diambil paket #${id}`);
+
+    if (hasil.affectedRows === 0) {
+        return res.redirect('/dashboard?msg=' + encodeURIComponent('Paket tidak punya catatan diambil.'));
+    }
+    res.redirect('/dashboard?msg=' + encodeURIComponent('Status pengambilan paket dibatalkan.'));
 });
 
 // Proses Hapus Paket (hapus pengambilan terlebih dahulu karena FK tanpa CASCADE)

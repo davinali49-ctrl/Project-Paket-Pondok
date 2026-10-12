@@ -22,12 +22,14 @@
                 </div>
                 <div class="form-group">
                     <label for="ekspedisi">Ekspedisi <span style="color:#dc3545">*</span></label>
-                    <input type="text" id="ekspedisi" name="ekspedisi" list="daftar-ekspedisi" value="<%= isi.ekspedisi || '' %>" required placeholder="Contoh: J&T, JNE, SiCepat">
-                    <datalist id="daftar-ekspedisi">
-                        <% ekspedisi.forEach(nama => { %>
-                            <option value="<%= nama %>">
+                    <select id="ekspedisi" name="ekspedisi" required>
+                        <option value="">— Pilih Ekspedisi —</option>
+                        <% ekspedisi.forEach(e => { %>
+                            <option value="<%= e.id_ekspedisi %>" <%= String(isi.ekspedisi) === String(e.id_ekspedisi) ? 'selected' : '' %>>
+                                <%= e.nama_ekspedisi %>
+                            </option>
                         <% }) %>
-                    </datalist>
+                    </select>
                 </div>
             </div>
 

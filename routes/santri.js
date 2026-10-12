@@ -14,19 +14,20 @@ function ambilNilai(body) {
     };
 }
 
-// Daftar Santri
+// Daftar Santri (dengan asrama dari tabel master)
 router.get('/santri', async (req, res) => {
     const [santri] = await db.execute(`
         SELECT
             s.id_santri,
             s.nama_santri,
-            s.asrama,
+            a.nama_asrama,
             COUNT(p.id_paket) AS jumlah_paket,
             COALESCE(SUM(CASE WHEN pg.id_pengambilan IS NOT NULL THEN 1 ELSE 0 END), 0) AS paket_diambil
         FROM santri s
+        LEFT JOIN asrama a ON s.id_asrama = a.id_asrama
         LEFT JOIN paket p ON p.id_santri = s.id_santri
         LEFT JOIN pengambilan pg ON pg.id_paket = p.id_paket
-        GROUP BY s.id_santri, s.nama_santri, s.asrama
+        GROUP BY s.id_santri, s.nama_santri, a.nama_asrama
         ORDER BY s.nama_santri ASC
     `);
 
@@ -39,11 +40,11 @@ router.get('/santri', async (req, res) => {
 
 // Form Tambah Santri
 router.get('/santri/tambah', async (req, res) => {
-    const [asrama] = await db.execute('SELECT nama_asrama FROM asrama ORDER BY nama_asrama ASC');
+    const [asrama] = await db.execute('SELECT id_asrama, nama_asrama FROM asrama ORDER BY nama_asrama ASC');
     res.render('santri/form', {
         mode: 'tambah',
         santri: null,
-        daftarAsrama: asrama.map((r) => r.nama_asrama),
+        daftarAsrama: asrama,
         error: null,
         nilai: null
     });
@@ -52,21 +53,22 @@ router.get('/santri/tambah', async (req, res) => {
 // Simpan Santri Baru
 router.post('/santri', async (req, res) => {
     const nilai = ambilNilai(req.body);
+    const idAsrama = nilai.asrama ? Number(nilai.asrama) || null : null;
 
-    if (!nilai.nama_santri || !nilai.asrama) {
-        const [asrama] = await db.execute('SELECT nama_asrama FROM asrama ORDER BY nama_asrama ASC');
+    if (!nilai.nama_santri || !idAsrama) {
+        const [asrama] = await db.execute('SELECT id_asrama, nama_asrama FROM asrama ORDER BY nama_asrama ASC');
         return res.status(400).render('santri/form', {
             mode: 'tambah',
             santri: null,
-            daftarAsrama: asrama.map((r) => r.nama_asrama),
+            daftarAsrama: asrama,
             error: 'Nama santri dan asrama wajib diisi.',
             nilai
         });
     }
 
     const [hasil] = await db.execute(
-        'INSERT INTO santri (nama_santri, asrama) VALUES (?, ?)',
-        [nilai.nama_santri, nilai.asrama]
+        'INSERT INTO santri (nama_santri, id_asrama) VALUES (?, ?)',
+        [nilai.nama_santri, idAsrama]
     );
 
     await logAktivitas(req.session.id_petugas, 'TAMBAH_SANTRI', `Menambahkan santri "${nilai.nama_santri}" (#${hasil.insertId})`);
@@ -81,11 +83,11 @@ router.get('/santri/:id/edit', async (req, res) => {
     const [rows] = await db.execute('SELECT * FROM santri WHERE id_santri = ?', [id]);
     if (rows.length === 0) return res.status(404).send('Santri tidak ditemukan.');
 
-    const [asrama] = await db.execute('SELECT nama_asrama FROM asrama ORDER BY nama_asrama ASC');
+    const [asrama] = await db.execute('SELECT id_asrama, nama_asrama FROM asrama ORDER BY nama_asrama ASC');
     res.render('santri/form', {
         mode: 'edit',
         santri: rows[0],
-        daftarAsrama: asrama.map((r) => r.nama_asrama),
+        daftarAsrama: asrama,
         error: null,
         nilai: null
     });
@@ -97,21 +99,22 @@ router.post('/santri/:id', async (req, res) => {
     if (!Number.isInteger(id)) return res.redirect('/santri');
 
     const nilai = ambilNilai(req.body);
+    const idAsrama = nilai.asrama ? Number(nilai.asrama) || null : null;
 
-    if (!nilai.nama_santri || !nilai.asrama) {
-        const [asrama] = await db.execute('SELECT nama_asrama FROM asrama ORDER BY nama_asrama ASC');
+    if (!nilai.nama_santri || !idAsrama) {
+        const [asrama] = await db.execute('SELECT id_asrama, nama_asrama FROM asrama ORDER BY nama_asrama ASC');
         return res.status(400).render('santri/form', {
             mode: 'edit',
             santri: { id_santri: id, ...nilai },
-            daftarAsrama: asrama.map((r) => r.nama_asrama),
+            daftarAsrama: asrama,
             error: 'Nama santri dan asrama wajib diisi.',
             nilai
         });
     }
 
     await db.execute(
-        'UPDATE santri SET nama_santri = ?, asrama = ? WHERE id_santri = ?',
-        [nilai.nama_santri, nilai.asrama, id]
+        'UPDATE santri SET nama_santri = ?, id_asrama = ? WHERE id_santri = ?',
+        [nilai.nama_santri, idAsrama, id]
     );
 
     await logAktivitas(req.session.id_petugas, 'UBAH_SANTRI', `Mengubah santri #${id}`);

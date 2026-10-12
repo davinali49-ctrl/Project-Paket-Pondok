@@ -17,6 +17,38 @@
             <a href="/paket/tambah" class="btn btn-primary">+ Tambah Paket</a>
         </div>
 
+        <form method="GET" action="/dashboard" class="filter-form">
+            <input type="text" name="q" placeholder="Cari nama paket, no. resi, santri, atau asrama..." value="<%= filter.q %>">
+            <select name="status">
+                <option value="">Semua Status</option>
+                <option value="belum" <%= filter.status === 'belum' ? 'selected' : '' %>>Belum Diambil</option>
+                <option value="sudah" <%= filter.status === 'sudah' ? 'selected' : '' %>>Sudah Diambil</option>
+            </select>
+            <select name="ekspedisi">
+                <option value="">Semua Ekspedisi</option>
+                <% ekspedisi.forEach(e => { %>
+                    <option value="<%= e.id_ekspedisi %>" <%= String(filter.ekspedisi) === String(e.id_ekspedisi) ? 'selected' : '' %>>
+                        <%= e.nama_ekspedisi %>
+                    </option>
+                <% }) %>
+            </select>
+            <select name="asrama">
+                <option value="">Semua Asrama</option>
+                <% asrama.forEach(a => { %>
+                    <option value="<%= a.id_asrama %>" <%= String(filter.asrama) === String(a.id_asrama) ? 'selected' : '' %>>
+                        <%= a.nama_asrama %>
+                    </option>
+                <% }) %>
+            </select>
+            <button type="submit" class="btn btn-primary">Cari</button>
+            <a href="/dashboard" class="btn btn-secondary">Reset</a>
+        </form>
+
+        <% const aktifFilter = filter.q || filter.status || filter.ekspedisi || filter.asrama; %>
+        <div class="result-info">
+            <%= aktifFilter ? `Ditemukan ${paket.length} paket.` : `Total ${paket.length} paket.` %>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -36,7 +68,11 @@
                             <td><strong><%= item.no_resi ? item.no_resi : '-' %></strong></td>
                             <td><%= item.nama_pada_paket %></td>
                             <td>
-                                <%= item.nama_santri ? item.nama_santri : 'Belum Terhubung' %>
+                                <% if (item.nama_santri) { %>
+                                    <%= item.nama_santri %> (<%= item.nama_asrama %>)
+                                <% } else { %>
+                                    <span class="text-muted">Belum Terhubung</span>
+                                <% } %>
                             </td>
                             <td><%= item.nama_ekspedisi %></td>
                             <td><%= formatTanggalWaktu(item.tanggal_diterima) %></td>
@@ -54,8 +90,15 @@
                             <td>
                                 <div class="actions">
                                     <a href="/paket/<%= item.id_paket %>/edit" class="btn btn-warning btn-sm">Edit</a>
+                                    <% if (!item.id_santri) { %>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="bukaIdentifikasi(<%= item.id_paket %>)">Identifikasi</button>
+                                    <% } %>
                                     <% if (item.status_paket === 'BELUM DIAMBIL') { %>
                                         <button type="button" class="btn btn-success btn-sm" onclick="bukaModal(<%= item.id_paket %>)">Tandai Diambil</button>
+                                    <% } else { %>
+                                        <form method="POST" action="/paket/<%= item.id_paket %>/batal-ambil" onsubmit="return confirm('Batalkan status diambil paket <%= item.no_resi ? item.no_resi : item.id_paket %>?');">
+                                            <button type="submit" class="btn btn-secondary btn-sm">Batal Diambil</button>
+                                        </form>
                                     <% } %>
                                     <form method="POST" action="/paket/<%= item.id_paket %>/hapus" onsubmit="return confirm('Hapus paket <%= item.no_resi ? item.no_resi : item.id_paket %>?');">
                                         <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
@@ -66,7 +109,9 @@
                     <% }) %>
                 <% } else { %>
                     <tr>
-                        <td colspan="7" style="text-align: center; color: #888;">Belum ada data paket di database.</td>
+                        <td colspan="7" style="text-align: center; color: #888;">
+                            <%= aktifFilter ? 'Tidak ada paket yang cocok dengan pencarian.' : 'Belum ada data paket di database.' %>
+                        </td>
                     </tr>
                 <% } %>
             </tbody>
@@ -98,6 +143,29 @@
     </div>
 </div>
 
+<!-- Modal Identifikasi Penerima -->
+<div class="modal-overlay" id="modal-identifikasi" style="display: none;">
+    <div class="modal">
+        <h3>Identifikasi Penerima</h3>
+        <p style="color: #555; font-size: 14px;">Hubungkan paket ini ke santri pemilik.</p>
+        <form method="POST" id="form-identifikasi" action="">
+            <div class="form-group">
+                <label for="id_santri_identifikasi">Santri Pemilik</label>
+                <select name="id_santri" required>
+                    <option value="">— Pilih Santri —</option>
+                    <% santri.forEach(s => { %>
+                        <option value="<%= s.id_santri %>"><%= s.nama_santri %> (<%= s.nama_asrama %>)</option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="actions" style="justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="tutupIdentifikasi()">Batal</button>
+                <button type="submit" class="btn btn-primary">Hubungkan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     function bukaModal(idPaket) {
         document.getElementById('form-ambil').action = '/paket/' + idPaket + '/ambil';
@@ -107,6 +175,14 @@
     }
     function tutupModal() {
         document.getElementById('modal-ambil').style.display = 'none';
+    }
+    function bukaIdentifikasi(idPaket) {
+        document.getElementById('form-identifikasi').action = '/paket/' + idPaket + '/identifikasi';
+        document.getElementById('id_santri_identifikasi').value = '';
+        document.getElementById('modal-identifikasi').style.display = 'flex';
+    }
+    function tutupIdentifikasi() {
+        document.getElementById('modal-identifikasi').style.display = 'none';
     }
 </script>
 
