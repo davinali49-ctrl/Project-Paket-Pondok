@@ -2,91 +2,83 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { requireLogin } = require('../middleware/auth');
-const { logAktivitas } = require('../utils/aktivitas');
 
 // Semua route pengumuman hanya boleh diakses setelah login
 router.use(requireLogin);
 
-// Daftar Pengumuman
+// Format tanggal ringkas untuk teks WhatsApp: DD/MM/YYYY HH:MM
+function formatTanggalSingkat(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '-';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Halaman Pengumuman: daftar otomatis paket yang masuk & BELUM diambil
 router.get('/pengumuman', async (req, res) => {
-    const [pengumuman] = await db.execute(`
+    const q = (req.query.q || '').trim();
+
+    let sql = `
         SELECT
-            pg.id_pengumuman,
-            pg.id_paket,
-            pg.isi_pengumuman,
-            pg.tanggal_pengumuman,
+            p.id_paket,
             p.no_resi,
             p.nama_pada_paket,
             s.nama_santri,
-            a.nama_asrama
-        FROM pengumuman pg
-        JOIN paket p ON pg.id_paket = p.id_paket
-        LEFT JOIN santri s ON p.id_santri = s.id_santri
-        LEFT JOIN asrama a ON s.id_asrama = a.id_asrama
-        ORDER BY pg.tanggal_pengumuman DESC
-    `);
-
-    res.render('pengumuman/index', {
-        pengumuman,
-        msg: req.query.msg,
-        error: req.query.error
-    });
-});
-
-// Form Tambah Pengumuman
-router.get('/pengumuman/tambah', async (req, res) => {
-    const [paket] = await db.execute(`
-        SELECT p.id_paket, p.nama_pada_paket, p.no_resi, s.nama_santri
+            a.nama_asrama,
+            e.nama_ekspedisi,
+            p.tanggal_diterima
         FROM paket p
         LEFT JOIN santri s ON p.id_santri = s.id_santri
-        ORDER BY p.tanggal_diterima DESC
-    `);
-    res.render('pengumuman/form', { mode: 'tambah', pengumuman: null, paket, error: null, nilai: null });
-});
+        LEFT JOIN asrama a ON s.id_asrama = a.id_asrama
+        LEFT JOIN ekspedisi e ON p.id_ekspedisi = e.id_ekspedisi
+        LEFT JOIN pengambilan pg ON p.id_paket = pg.id_paket
+        WHERE pg.id_pengambilan IS NULL
+    `;
+    const params = [];
 
-// Simpan Pengumuman Baru
-router.post('/pengumuman', async (req, res) => {
-    const isi = (req.body.isi_pengumuman || '').trim();
-    const idPaket = req.body.id_paket ? Number(req.body.id_paket) || null : null;
-
-    if (!isi || !idPaket) {
-        const [paket] = await db.execute(`
-            SELECT p.id_paket, p.nama_pada_paket, p.no_resi, s.nama_santri
-            FROM paket p
-            LEFT JOIN santri s ON p.id_santri = s.id_santri
-            ORDER BY p.tanggal_diterima DESC
-        `);
-        return res.status(400).render('pengumuman/form', {
-            mode: 'tambah',
-            pengumuman: null,
-            paket,
-            error: 'Isi pengumuman dan paket wajib diisi.',
-            nilai: { isi_pengumuman: isi, id_paket: idPaket || '' }
-        });
+    if (q) {
+        const kata = '%' + q.replace(/[\\%_]/g, (m) => '\\' + m) + '%';
+        sql += ' AND (p.no_resi LIKE ? OR p.nama_pada_paket LIKE ? OR s.nama_santri LIKE ?)';
+        params.push(kata, kata, kata);
     }
 
-    const [hasil] = await db.execute(
-        'INSERT INTO pengumuman (id_paket, isi_pengumuman) VALUES (?, ?)',
-        [idPaket, isi]
-    );
+    sql += ' ORDER BY p.tanggal_diterima DESC';
 
-    await logAktivitas(req.session.id_petugas, 'TAMBAH_PENGUMUMAN',
-        `Menambahkan pengumuman untuk paket #${idPaket}`);
-    res.redirect('/pengumuman?msg=' + encodeURIComponent('Pengumuman berhasil ditambahkan.'));
-});
+    const [daftarPaket] = await db.execute(sql, params);
 
-// Proses Hapus Pengumuman (FK CASCADE ke paket, bebas aman)
-router.post('/pengumuman/:id/hapus', async (req, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isInteger(id)) return res.redirect('/pengumuman');
+    // Susun teks siap-salin untuk grup WhatsApp
+    const waktuUpdate = formatTanggalSingkat(new Date());
+    const baris = daftarPaket.map((item, i) => {
+        const nama = item.nama_santri
+            ? `${item.nama_santri}${item.nama_asrama ? ` (${item.nama_asrama})` : ''}`
+            : item.nama_pada_paket;
+        const bagian = [`${i + 1}. *${nama}*`];
+        if (item.no_resi) bagian.push(`Resi: ${item.no_resi}`);
+        if (item.nama_ekspedisi) bagian.push(item.nama_ekspedisi);
+        bagian.push(formatTanggalSingkat(item.tanggal_diterima));
+        return bagian.join(' — ');
+    });
 
-    const [hasil] = await db.execute('DELETE FROM pengumuman WHERE id_pengumuman = ?', [id]);
-    if (hasil.affectedRows === 0) {
-        return res.redirect('/pengumuman?msg=' + encodeURIComponent('Pengumuman tidak ditemukan.'));
-    }
+    const teksWhatsapp = daftarPaket.length > 0
+        ? [
+            '📦 *PENGUMUMAN PAKET SANTRI*',
+            'Berikut paket yang sudah datang dan *belum diambil*',
+            `(update: ${waktuUpdate}):`,
+            '',
+            ...baris,
+            '',
+            `Total: ${daftarPaket.length} paket`,
+            'Silakan diambil di sekretariat. Terima kasih.'
+        ].join('\n')
+        : '';
 
-    await logAktivitas(req.session.id_petugas, 'HAPUS_PENGUMUMAN', `Menghapus pengumuman #${id}`);
-    res.redirect('/pengumuman?msg=' + encodeURIComponent('Pengumuman berhasil dihapus.'));
+    res.render('pengumuman/index', {
+        paket: daftarPaket,
+        q,
+        teksWhatsapp,
+        msg: req.query.msg
+    });
 });
 
 module.exports = router;

@@ -5,34 +5,51 @@
     <% if (msg) { %>
         <div class="alert alert-success"><%= msg %></div>
     <% } %>
-    <% if (error) { %>
-        <div class="alert alert-error"><%= error %></div>
-    <% } %>
 
     <div class="card">
         <div class="card-header">
-            <h3>Daftar Pengumuman Paket</h3>
-            <a href="/pengumuman/tambah" class="btn btn-primary">+ Tambah Pengumuman</a>
+            <h3>Pengumuman Paket Belum Diambil</h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span id="status-salin" style="color:#198754; font-size:13px;"></span>
+                <button type="button" class="btn btn-primary" id="btn-salin" onclick="salinDaftar()"
+                        <%= paket.length === 0 ? 'disabled' : '' %>>Salin Daftar (WhatsApp)</button>
+            </div>
+        </div>
+
+        <p class="text-muted" style="margin-top:-5px;">
+            Daftar ini otomatis mengikuti paket yang sudah masuk namun <strong>belum diambil</strong>.
+            Setelah paket ditandai diambil, ia akan hilang dari daftar ini.
+        </p>
+
+        <form method="GET" action="/pengumuman" class="filter-form">
+            <input type="text" name="q" placeholder="Cari nama paket, no. resi, atau nama santri..." value="<%= q %>">
+            <button type="submit" class="btn btn-primary">Cari</button>
+            <a href="/pengumuman" class="btn btn-secondary">Reset</a>
+        </form>
+
+        <div class="result-info">
+            <%= q ? `Ditemukan ${paket.length} paket belum diambil.` : `Total ${paket.length} paket belum diambil.` %>
         </div>
 
         <table>
             <thead>
                 <tr>
-                    <th>Paket</th>
+                    <th>No</th>
+                    <th>Nama pada Paket</th>
+                    <th>No. Resi</th>
                     <th>Santri Pemilik</th>
-                    <th>Isi Pengumuman</th>
-                    <th>Tanggal</th>
+                    <th>Ekspedisi</th>
+                    <th>Tanggal Masuk</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                <% if (pengumuman.length > 0) { %>
-                    <% pengumuman.forEach(item => { %>
+                <% if (paket.length > 0) { %>
+                    <% paket.forEach((item, i) => { %>
                         <tr>
-                            <td>
-                                <strong><%= item.nama_pada_paket %></strong>
-                                <% if (item.no_resi) { %><br><span class="text-muted"><%= item.no_resi %></span><% } %>
-                            </td>
+                            <td><%= i + 1 %></td>
+                            <td><strong><%= item.nama_pada_paket %></strong></td>
+                            <td><%= item.no_resi ? item.no_resi : '-' %></td>
                             <td>
                                 <% if (item.nama_santri) { %>
                                     <%= item.nama_santri %> (<%= item.nama_asrama %>)
@@ -40,26 +57,104 @@
                                     <span class="text-muted">Belum Terhubung</span>
                                 <% } %>
                             </td>
-                            <td><%= item.isi_pengumuman %></td>
-                            <td><%= formatTanggalWaktu(item.tanggal_pengumuman) %></td>
+                            <td><%= item.nama_ekspedisi %></td>
+                            <td><%= formatTanggalWaktu(item.tanggal_diterima) %></td>
                             <td>
                                 <div class="actions">
-                                    <form method="POST" action="/pengumuman/<%= item.id_pengumuman %>/hapus" onsubmit="return confirm('Hapus pengumuman ini?');">
-                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                    </form>
+                                    <button type="button" class="btn btn-success btn-sm" onclick="bukaModal(<%= item.id_paket %>)">Tandai Diambil</button>
                                 </div>
                             </td>
                         </tr>
                     <% }) %>
                 <% } else { %>
                     <tr>
-                        <td colspan="5" style="text-align: center; color: #888;">Belum ada pengumuman.</td>
+                        <td colspan="7" style="text-align: center; color: #888;">
+                            <%= q ? 'Tidak ada paket yang cocok dengan pencarian.' : 'Belum ada paket yang menunggu diambil.' %>
+                        </td>
                     </tr>
                 <% } %>
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Teks siap-salin (disembunyikan, dipakai tombol Salin) -->
+<pre id="teks-salin" style="display:none;"><%= teksWhatsapp %></pre>
+
+<!-- Modal Tandai Paket Sudah Diambil -->
+<div class="modal-overlay" id="modal-ambil" style="display: none;">
+    <div class="modal">
+        <h3>Tandai Paket Sudah Diambil</h3>
+        <form method="POST" id="form-ambil" action="">
+            <div class="form-group">
+                <label for="nama_pengambil">Nama Pengambil</label>
+                <input type="text" id="nama_pengambil" name="nama_pengambil" required placeholder="Nama yang mengambil paket">
+            </div>
+            <div class="form-group">
+                <label for="jenis_pengambilan">Jenis Pengambilan</label>
+                <select id="jenis_pengambilan" name="jenis_pengambilan" required>
+                    <option value="AMBIL_SENDIRI">Diambil Sendiri</option>
+                    <option value="DIWAKILKAN">Diwakilkan</option>
+                </select>
+            </div>
+            <div class="actions" style="justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="tutupModal()">Batal</button>
+                <button type="submit" class="btn btn-success">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function bukaModal(idPaket) {
+        document.getElementById('form-ambil').action = '/paket/' + idPaket + '/ambil';
+        document.getElementById('nama_pengambil').value = '';
+        document.getElementById('jenis_pengambilan').value = 'AMBIL_SENDIRI';
+        document.getElementById('modal-ambil').style.display = 'flex';
+    }
+    function tutupModal() {
+        document.getElementById('modal-ambil').style.display = 'none';
+    }
+
+    function tampilStatusPesan(pesan, warna) {
+        const el = document.getElementById('status-salin');
+        el.textContent = pesan;
+        el.style.color = warna;
+        setTimeout(() => { el.textContent = ''; }, 3000);
+    }
+
+    function salinFallback(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+            document.execCommand('copy');
+            tampilStatusPesan('✓ Daftar berhasil disalin!', '#198754');
+        } catch (e) {
+            tampilStatusPesan('Gagal menyalin, salin manual dari kotak teks di bawah.', '#dc3545');
+        }
+        document.body.removeChild(ta);
+    }
+
+    function salinDaftar() {
+        const text = document.getElementById('teks-salin').textContent;
+        if (!text.trim()) {
+            tampilStatusPesan('Tidak ada paket untuk disalin.', '#dc3545');
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(() => tampilStatusPesan('✓ Daftar berhasil disalin!', '#198754'))
+                .catch(() => salinFallback(text));
+        } else {
+            salinFallback(text);
+        }
+    }
+</script>
 
 </body>
 </html>

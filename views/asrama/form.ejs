@@ -1,0 +1,37 @@
+<%- include('../partials/head', { judul: mode === 'tambah' ? 'Tambah Asrama' : 'Edit Asrama' }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3><%= mode === 'tambah' ? 'Tambah Asrama Baru' : 'Edit Asrama' %></h3>
+            <a href="/asrama" class="btn btn-secondary">← Kembali</a>
+        </div>
+
+        <% if (error) { %>
+            <div class="alert alert-error"><%= error %></div>
+        <% } %>
+
+        <% const isi = nilai || asrama || {}; %>
+
+        <form method="POST" action="<%= mode === 'tambah' ? '/asrama' : '/asrama/' + asrama.id_asrama %>">
+            <div class="form-group">
+                <label for="nama_asrama">Nama Asrama <span style="color:#dc3545">*</span></label>
+                <input type="text" id="nama_asrama" name="nama_asrama" value="<%= isi.nama_asrama || '' %>" required placeholder="Contoh: Asrama Al-Farabi / Asrama Putra 1">
+            </div>
+
+            <div class="form-group">
+                <label for="keterangan">Keterangan</label>
+                <textarea id="keterangan" name="keterangan" rows="3" placeholder="Catatan tambahan (opsional)"><%= isi.keterangan || '' %></textarea>
+            </div>
+
+            <div class="actions" style="margin-top: 10px;">
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                <a href="/asrama" class="btn btn-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

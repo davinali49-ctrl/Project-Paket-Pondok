@@ -70,8 +70,8 @@ status pengambilan, serta melakukan tambah/ubah/hapus paket dan pengambilan.
 - Batal ambil (membatalkan status pengambilan)
 - Tambah / ubah / hapus paket
 - Tandai paket sudah diambil (mandiri / diwakilkan)
-- Kelola data santri & asrama (tabel master)
-- Modul pengumuman paket
+- Kelola data santri & kelola master asrama (tambah, ganti nama, hapus)
+- Pengumuman otomatis: daftar paket yang belum diambil + salin teks untuk grup WhatsApp
 - Halaman riwayat aktivitas petugas (`riwayat_aktivitas`)
 - Normalisasi relasi: `santri.id_asrama` & `paket.id_ekspedisi` (foreign key)
 
@@ -89,7 +89,8 @@ middleware/auth.js      Middleware proteksi halaman (requireLogin)
 routes/auth.js          Login & logout
 routes/paket.js         CRUD paket + tandai pengambilan, identifikasi, batal ambil
 routes/santri.js        CRUD santri (relasi asrama)
-routes/pengumuman.js    CRUD pengumuman paket
+routes/asrama.js        CRUD master asrama (tambah, ganti nama, hapus)
+routes/pengumuman.js    Pengumuman otomatis (paket belum diambil + salin WhatsApp)
 routes/riwayat.js       Riwayat aktivitas petugas
 utils/aktivitas.js      Pencatat riwayat aktivitas
 views/                  Template EJS

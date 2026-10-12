@@ -9,6 +9,7 @@ const paketRoutes = require('./routes/paket');
 const santriRoutes = require('./routes/santri');
 const pengumumanRoutes = require('./routes/pengumuman');
 const riwayatRoutes = require('./routes/riwayat');
+const asramaRoutes = require('./routes/asrama');
 const { requireLogin } = require('./middleware/auth');
 
 const app = express();
@@ -55,9 +56,10 @@ app.get('/', (req, res) => {
 // Route Auth (Login & Logout)
 app.use('/', authRoutes);
 
-// Route Modul Paket, Santri, Pengumuman & Riwayat
+// Route Modul Paket, Santri, Asrama, Pengumuman & Riwayat
 app.use('/', paketRoutes);
 app.use('/', santriRoutes);
+app.use('/', asramaRoutes);
 app.use('/', pengumumanRoutes);
 app.use('/', riwayatRoutes);
 

@@ -1,0 +1,62 @@
+<%- include('../partials/head', { judul: 'Data Asrama' }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container">
+    <% if (msg) { %>
+        <div class="alert alert-success"><%= msg %></div>
+    <% } %>
+    <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Daftar Asrama</h3>
+            <a href="/asrama/tambah" class="btn btn-primary">+ Tambah Asrama</a>
+        </div>
+
+        <p class="text-muted" style="margin-top:-5px;">
+            Ganti nama asrama di sini akan otomatis berlaku ke semua santri &amp; paket.
+            Asrama yang masih ditempati santri tidak dapat dihapus.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Asrama</th>
+                    <th>Keterangan</th>
+                    <th>Jumlah Santri</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (asrama.length > 0) { %>
+                    <% asrama.forEach((a, i) => { %>
+                        <tr>
+                            <td><%= i + 1 %></td>
+                            <td><strong><%= a.nama_asrama %></strong></td>
+                            <td><%= a.keterangan ? a.keterangan : '-' %></td>
+                            <td><%= a.jumlah_santri %></td>
+                            <td>
+                                <div class="actions">
+                                    <a href="/asrama/<%= a.id_asrama %>/edit" class="btn btn-warning btn-sm">Edit</a>
+                                    <form method="POST" action="/asrama/<%= a.id_asrama %>/hapus" onsubmit="return confirm('Hapus asrama <%= a.nama_asrama %>?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #888;">Belum ada data asrama.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
