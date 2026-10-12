@@ -80,15 +80,19 @@ app.get('/dashboard', requireLogin, async (req, res) => {
         if (status === 'belum') kondisi.push('pg.id_pengambilan IS NULL');
         if (status === 'sudah') kondisi.push('pg.id_pengambilan IS NOT NULL');
 
-        const idEks = Number(ekspedisi);
-        if (Number.isInteger(idEks)) {
-            kondisi.push('p.id_ekspedisi = ?');
-            params.push(idEks);
+        if (ekspedisi && String(ekspedisi).trim() !== '') {
+            const idEks = Number(ekspedisi);
+            if (Number.isInteger(idEks) && idEks > 0) {
+                kondisi.push('p.id_ekspedisi = ?');
+                params.push(idEks);
+            }
         }
-        const idAsr = Number(asrama);
-        if (Number.isInteger(idAsr)) {
-            kondisi.push('a.id_asrama = ?');
-            params.push(idAsr);
+        if (asrama && String(asrama).trim() !== '') {
+            const idAsr = Number(asrama);
+            if (Number.isInteger(idAsr) && idAsr > 0) {
+                kondisi.push('a.id_asrama = ?');
+                params.push(idAsr);
+            }
         }
 
         const whereClause = kondisi.length > 0 ? 'WHERE ' + kondisi.join(' AND ') : '';
