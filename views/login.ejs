@@ -75,7 +75,7 @@
     <h2>Login Petugas</h2>
 
     <% if (error) { %>
-        <div class="alert-error">Username atau password salah!</div>
+        <div class="alert-error"><%= error === '2' ? 'Silakan login terlebih dahulu.' : 'Username atau password salah!' %></div>
     <% } %>
 
     <form action="/login" method="POST">

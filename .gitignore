@@ -1,0 +1,13 @@
+# Dependensi
+node_modules/
+
+# Konfigurasi lingkungan (jangan pernah di-commit)
+.env
+
+# Log
+*.log
+npm-debug.log*
+
+# Sistem operasi
+.DS_Store
+Thumbs.db

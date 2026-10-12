@@ -1,0 +1,41 @@
+<%- include('../partials/head', { judul: mode === 'tambah' ? 'Tambah Santri' : 'Edit Santri' }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3><%= mode === 'tambah' ? 'Tambah Santri' : 'Edit Santri' %></h3>
+            <a href="/santri" class="btn btn-secondary">← Kembali</a>
+        </div>
+
+        <% if (error) { %>
+            <div class="alert alert-error"><%= error %></div>
+        <% } %>
+
+        <% const isi = nilai || santri || {}; %>
+
+        <form method="POST" action="<%= mode === 'tambah' ? '/santri' : '/santri/' + santri.id_santri %>">
+            <div class="form-group">
+                <label for="nama_santri">Nama Santri <span style="color:#dc3545">*</span></label>
+                <input type="text" id="nama_santri" name="nama_santri" value="<%= isi.nama_santri || '' %>" required>
+            </div>
+            <div class="form-group">
+                <label for="asrama">Asrama <span style="color:#dc3545">*</span></label>
+                <input type="text" id="asrama" name="asrama" list="daftar-asrama" value="<%= isi.asrama || '' %>" required placeholder="Contoh: Asrama A">
+                <datalist id="daftar-asrama">
+                    <% daftarAsrama.forEach(nama => { %>
+                        <option value="<%= nama %>">
+                    <% }) %>
+                </datalist>
+            </div>
+
+            <div class="actions" style="margin-top: 10px;">
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                <a href="/santri" class="btn btn-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

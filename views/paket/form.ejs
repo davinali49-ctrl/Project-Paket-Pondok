@@ -1,0 +1,71 @@
+<%- include('../partials/head', { judul: mode === 'tambah' ? 'Tambah Paket' : 'Edit Paket' }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3><%= mode === 'tambah' ? 'Tambah Paket Baru' : 'Edit Paket' %></h3>
+            <a href="/dashboard" class="btn btn-secondary">← Kembali</a>
+        </div>
+
+        <% if (error) { %>
+            <div class="alert alert-error"><%= error %></div>
+        <% } %>
+
+        <% const isi = nilai || paket || {}; %>
+
+        <form method="POST" action="<%= mode === 'tambah' ? '/paket' : '/paket/' + paket.id_paket %>">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="no_resi">No. Resi</label>
+                    <input type="text" id="no_resi" name="no_resi" value="<%= isi.no_resi || '' %>" placeholder="Contoh: JP123456789">
+                </div>
+                <div class="form-group">
+                    <label for="ekspedisi">Ekspedisi <span style="color:#dc3545">*</span></label>
+                    <input type="text" id="ekspedisi" name="ekspedisi" list="daftar-ekspedisi" value="<%= isi.ekspedisi || '' %>" required placeholder="Contoh: J&T, JNE, SiCepat">
+                    <datalist id="daftar-ekspedisi">
+                        <% ekspedisi.forEach(nama => { %>
+                            <option value="<%= nama %>">
+                        <% }) %>
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nama_pada_paket">Nama pada Paket <span style="color:#dc3545">*</span></label>
+                <input type="text" id="nama_pada_paket" name="nama_pada_paket" value="<%= isi.nama_pada_paket || '' %>" required placeholder="Nama penerima yang tertulis pada paket">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_santri">Santri Pemilik</label>
+                    <select id="id_santri" name="id_santri">
+                        <option value="">— Belum terhubung —</option>
+                        <% santri.forEach(s => { %>
+                            <option value="<%= s.id_santri %>" <%= String(isi.id_santri) === String(s.id_santri) ? 'selected' : '' %>>
+                                <%= s.nama_santri %> (<%= s.asrama %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tanggal_diterima">Tanggal Diterima <span style="color:#dc3545">*</span></label>
+                    <input type="datetime-local" id="tanggal_diterima" name="tanggal_diterima" value="<%= toDatetimeLocal(isi.tanggal_diterima) %>" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="keterangan">Keterangan</label>
+                <textarea id="keterangan" name="keterangan" rows="3" placeholder="Catatan tambahan (opsional)"><%= isi.keterangan || '' %></textarea>
+            </div>
+
+            <div class="actions" style="margin-top: 10px;">
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                <a href="/dashboard" class="btn btn-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

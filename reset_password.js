@@ -1,39 +1,57 @@
 const bcrypt = require('bcryptjs');
 const db = require('./config/database');
 
-async function updateAtauTambahPetugas() {
-    try {
-        const usernameBaru = 'Davin';
-        const passwordBaru = '123456';
-        const namaPetugas = 'Muhammad Davin Ali Fikri'; // Bisa disesuaikan nama lengkapnya
+/*
+ * Skrip untuk membuat atau memperbarui akun petugas.
+ *
+ * Penggunaan (jalankan dari folder proyek):
+ *   node reset_password.js <username> <password> <nama_petugas>
+ *
+ * Contoh:
+ *   node reset_password.js Davin 123456 "Muhammad Davin Ali Fikri"
+ *
+ * Jika username sudah ada, hanya password dan nama yang diperbarui.
+ * Jika belum ada, akun baru dibuat.
+ */
+async function buatAtauUpdatePetugas() {
+    const [, , username, password, namaPetugas] = process.argv;
 
+    if (!username || !password || !namaPetugas) {
+        console.error('❌ Penggunaan: node reset_password.js <username> <password> <nama_petugas>');
+        process.exit(1);
+    }
+
+    try {
         // Enkripsi password
         const salt = await bcrypt.genSalt(10);
-        const hashPassword = await bcrypt.hash(passwordBaru, salt);
+        const hashPassword = await bcrypt.hash(password, salt);
 
-        // Cek apakah username 'ahmad' ada untuk di-update, atau insert 'Davin' baru
-        const [petugasLama] = await db.execute('SELECT id_petugas FROM petugas WHERE username = "ahmad" LIMIT 1');
+        // Cek apakah username sudah ada
+        const [rows] = await db.execute(
+            'SELECT id_petugas FROM petugas WHERE username = ? LIMIT 1',
+            [username]
+        );
 
-        if (petugasLama.length > 0) {
-            // Update petugas 'ahmad' menjadi 'Davin'
+        if (rows.length > 0) {
             await db.execute(
-                'UPDATE petugas SET username = ?, password = ?, nama_petugas = ? WHERE username = "ahmad"',
-                [usernameBaru, hashPassword, namaPetugas]
+                'UPDATE petugas SET password = ?, nama_petugas = ? WHERE username = ?',
+                [hashPassword, namaPetugas, username]
             );
-            console.log(`✅ BERHASIL! Akun petugas 'ahmad' diubah menjadi username: "${usernameBaru}" dan password: "${passwordBaru}"`);
+            console.log(`✅ Akun petugas "${username}" berhasil diperbarui.`);
         } else {
-            // Tambahkan petugas baru 'Davin' jika 'ahmad' tidak ada
             await db.execute(
                 'INSERT INTO petugas (username, password, nama_petugas) VALUES (?, ?, ?)',
-                [usernameBaru, hashPassword, namaPetugas]
+                [username, hashPassword, namaPetugas]
             );
-            console.log(`✅ BERHASIL! Akun petugas baru ditambahkan: username: "${usernameBaru}" dan password: "${passwordBaru}"`);
+            console.log(`✅ Akun petugas baru "${username}" berhasil dibuat.`);
         }
     } catch (err) {
         console.error('❌ Error:', err.message);
+        process.exitCode = 1;
     } finally {
+        await db.end().catch(() => {});
         process.exit();
     }
 }
 
-updateAtauTambahPetugas();
+buatAtauUpdatePetugas();
