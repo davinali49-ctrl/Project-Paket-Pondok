@@ -19,7 +19,18 @@
                 <label for="nama_asrama">Nama Asrama <span style="color:#B23A3A">*</span></label>
                 <input type="text" id="nama_asrama" name="nama_asrama" value="<%= isi.nama_asrama || '' %>" required placeholder="Contoh: Asrama Al-Farabi / Asrama Putra 1">
             </div>
-
+            <div class="form-group">
+                <label for="pembimbing_asrama">Pembimbing Asrama</label>
+                <input type="text" id="pembimbing_asrama" name="pembimbing_asrama" value="<%= isi.pembimbing_asrama || '' %>" placeholder="Nama pembimbing asrama">
+            </div>
+            <div class="form-group">
+                <label for="no_hp_pembimbing">No. HP Pembimbing</label>
+                <input type="text" id="no_hp_pembimbing" name="no_hp_pembimbing" value="<%= isi.no_hp_pembimbing || '' %>" placeholder="08xxxxxxxxxx">
+            </div>
+            <div class="form-group">
+                <label for="kapasitas">Kapasitas</label>
+                <input type="number" id="kapasitas" name="kapasitas" value="<%= isi.kapasitas || '' %>" min="0" placeholder="Jumlah kapasitas santri">
+            </div>
             <div class="form-group">
                 <label for="keterangan">Keterangan</label>
                 <textarea id="keterangan" name="keterangan" rows="3" placeholder="Catatan tambahan (opsional)"><%= isi.keterangan || '' %></textarea>

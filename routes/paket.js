@@ -75,8 +75,7 @@ router.post('/paket', async (req, res) => {
         ]
     );
 
-    await logAktivitas(req.session.id_petugas, 'TAMBAH_PAKET',
-        `Menambahkan paket #${hasil.insertId} untuk "${nilai.nama_pada_paket}"`);
+    await logAktivitas(req.session.id_petugas, 'TAMBAH_PAKET', `Menambahkan paket #${hasil.insertId} untuk "${nilai.nama_pada_paket}"`, 'PAKET');
     res.redirect('/dashboard?msg=' + encodeURIComponent('Paket berhasil ditambahkan.'));
 });
 
@@ -126,7 +125,7 @@ router.post('/paket/:id', async (req, res) => {
         ]
     );
 
-    await logAktivitas(req.session.id_petugas, 'UBAH_PAKET', `Mengubah paket #${id}`);
+    await logAktivitas(req.session.id_petugas, 'UBAH_PAKET', `Mengubah paket #${id}`, 'PAKET');
     res.redirect('/dashboard?msg=' + encodeURIComponent('Paket berhasil diubah.'));
 });
 
@@ -142,12 +141,11 @@ router.post('/paket/:id/ambil', async (req, res) => {
 
     try {
         await db.execute(
-            `INSERT INTO pengambilan (id_paket, nama_pengambil, jenis_pengambilan, tanggal_diambil)
-             VALUES (?, ?, ?, NOW())`,
-            [id, namaPengambil, jenisPengambilan]
+            `INSERT INTO pengambilan (id_paket, id_petugas, nama_pengambil, jenis_pengambilan, tanggal_diambil)
+             VALUES (?, ?, ?, ?, NOW())`,
+            [id, req.session.id_petugas, namaPengambil, jenisPengambilan]
         );
-        await logAktivitas(req.session.id_petugas, 'TANDAI_DIAMBIL',
-            `Paket #${id} diambil oleh ${namaPengambil} (${jenisPengambilan})`);
+        await logAktivitas(req.session.id_petugas, 'TANDAI_DIAMBIL', `Paket #${id} diambil oleh ${namaPengambil} (${jenisPengambilan})`, 'PENGAMBILAN');
         res.redirect('/dashboard?msg=' + encodeURIComponent('Paket berhasil ditandai sudah diambil.'));
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
@@ -167,8 +165,7 @@ router.post('/paket/:id/identifikasi', async (req, res) => {
     }
 
     await db.execute('UPDATE paket SET id_santri = ? WHERE id_paket = ?', [idSantri, id]);
-    await logAktivitas(req.session.id_petugas, 'IDENTIFIKASI_PENERIMA',
-        `Paket #${id} dihubungkan ke santri #${idSantri}`);
+    await logAktivitas(req.session.id_petugas, 'IDENTIFIKASI_PENERIMA', `Paket #${id} dihubungkan ke santri #${idSantri}`, 'PAKET');
     res.redirect('/dashboard?msg=' + encodeURIComponent('Paket berhasil dihubungkan ke santri.'));
 });
 
@@ -178,7 +175,7 @@ router.post('/paket/:id/batal-ambil', async (req, res) => {
     if (!Number.isInteger(id)) return res.redirect('/dashboard');
 
     const [hasil] = await db.execute('DELETE FROM pengambilan WHERE id_paket = ?', [id]);
-    await logAktivitas(req.session.id_petugas, 'BATAL_DIAMBIL', `Membatalkan status diambil paket #${id}`);
+    await logAktivitas(req.session.id_petugas, 'BATAL_DIAMBIL', `Membatalkan status diambil paket #${id}`, 'PENGAMBILAN');
 
     if (hasil.affectedRows === 0) {
         return res.redirect('/dashboard?msg=' + encodeURIComponent('Paket tidak punya catatan diambil.'));
@@ -194,7 +191,7 @@ router.post('/paket/:id/hapus', async (req, res) => {
     await db.execute('DELETE FROM pengambilan WHERE id_paket = ?', [id]);
     const [hasil] = await db.execute('DELETE FROM paket WHERE id_paket = ?', [id]);
 
-    await logAktivitas(req.session.id_petugas, 'HAPUS_PAKET', `Menghapus paket #${id}`);
+    await logAktivitas(req.session.id_petugas, 'HAPUS_PAKET', `Menghapus paket #${id}`, 'PAKET');
     if (hasil.affectedRows === 0) {
         return res.redirect('/dashboard?msg=' + encodeURIComponent('Paket tidak ditemukan.'));
     }

@@ -10,7 +10,10 @@ router.use(requireLogin);
 function ambilNilai(body) {
     return {
         nama_santri: (body.nama_santri || '').trim(),
-        asrama: (body.asrama || '').trim()
+        asrama: (body.asrama || '').trim(),
+        no_hp: (body.no_hp || '').trim(),
+        jenis_kelamin: (body.jenis_kelamin || '').trim(),
+        keterangan: (body.keterangan || '').trim()
     };
 }
 
@@ -67,11 +70,11 @@ router.post('/santri', async (req, res) => {
     }
 
     const [hasil] = await db.execute(
-        'INSERT INTO santri (nama_santri, id_asrama) VALUES (?, ?)',
-        [nilai.nama_santri, idAsrama]
+        'INSERT INTO santri (nama_santri, id_asrama, no_hp, jenis_kelamin, keterangan) VALUES (?, ?, ?, ?, ?)',
+        [nilai.nama_santri, idAsrama, nilai.no_hp || null, nilai.jenis_kelamin || null, nilai.keterangan || null]
     );
 
-    await logAktivitas(req.session.id_petugas, 'TAMBAH_SANTRI', `Menambahkan santri "${nilai.nama_santri}" (#${hasil.insertId})`);
+    await logAktivitas(req.session.id_petugas, 'TAMBAH_SANTRI', `Menambahkan santri "${nilai.nama_santri}" (#${hasil.insertId})`, 'SANTRI');
     res.redirect('/santri?msg=' + encodeURIComponent('Santri berhasil ditambahkan.'));
 });
 
@@ -113,11 +116,11 @@ router.post('/santri/:id', async (req, res) => {
     }
 
     await db.execute(
-        'UPDATE santri SET nama_santri = ?, id_asrama = ? WHERE id_santri = ?',
-        [nilai.nama_santri, idAsrama, id]
+        'UPDATE santri SET nama_santri = ?, id_asrama = ?, no_hp = ?, jenis_kelamin = ?, keterangan = ? WHERE id_santri = ?',
+        [nilai.nama_santri, idAsrama, nilai.no_hp || null, nilai.jenis_kelamin || null, nilai.keterangan || null, id]
     );
 
-    await logAktivitas(req.session.id_petugas, 'UBAH_SANTRI', `Mengubah santri #${id}`);
+    await logAktivitas(req.session.id_petugas, 'UBAH_SANTRI', `Mengubah santri #${id}`, 'SANTRI');
     res.redirect('/santri?msg=' + encodeURIComponent('Santri berhasil diubah.'));
 });
 
@@ -138,7 +141,7 @@ router.post('/santri/:id/hapus', async (req, res) => {
     }
 
     await db.execute('DELETE FROM santri WHERE id_santri = ?', [id]);
-    await logAktivitas(req.session.id_petugas, 'HAPUS_SANTRI', `Menghapus santri #${id}`);
+    await logAktivitas(req.session.id_petugas, 'HAPUS_SANTRI', `Menghapus santri #${id}`, 'SANTRI');
     res.redirect('/santri?msg=' + encodeURIComponent('Santri berhasil dihapus.'));
 });
 

@@ -10,6 +10,9 @@ router.use(requireLogin);
 function ambilNilai(body) {
     return {
         nama_asrama: (body.nama_asrama || '').trim(),
+        pembimbing_asrama: (body.pembimbing_asrama || '').trim(),
+        no_hp_pembimbing: (body.no_hp_pembimbing || '').trim(),
+        kapasitas: body.kapasitas ? Number(body.kapasitas) || null : null,
         keterangan: (body.keterangan || '').trim()
     };
 }
@@ -20,11 +23,14 @@ router.get('/asrama', async (req, res) => {
         SELECT
             a.id_asrama,
             a.nama_asrama,
+            a.pembimbing_asrama,
+            a.no_hp_pembimbing,
+            a.kapasitas,
             a.keterangan,
             COUNT(s.id_santri) AS jumlah_santri
         FROM asrama a
         LEFT JOIN santri s ON s.id_asrama = a.id_asrama
-        GROUP BY a.id_asrama, a.nama_asrama, a.keterangan
+        GROUP BY a.id_asrama, a.nama_asrama, a.pembimbing_asrama, a.no_hp_pembimbing, a.kapasitas, a.keterangan
         ORDER BY a.nama_asrama ASC
     `);
 
@@ -61,12 +67,11 @@ router.post('/asrama', async (req, res) => {
     }
 
     const [hasil] = await db.execute(
-        'INSERT INTO asrama (nama_asrama, keterangan) VALUES (?, ?)',
-        [nilai.nama_asrama, nilai.keterangan || null]
+        'INSERT INTO asrama (nama_asrama, pembimbing_asrama, no_hp_pembimbing, kapasitas, keterangan) VALUES (?, ?, ?, ?, ?)',
+        [nilai.nama_asrama, nilai.pembimbing_asrama || null, nilai.no_hp_pembimbing || null, nilai.kapasitas, nilai.keterangan || null]
     );
 
-    await logAktivitas(req.session.id_petugas, 'TAMBAH_ASRAMA',
-        `Menambahkan asrama "${nilai.nama_asrama}" (#${hasil.insertId})`);
+    await logAktivitas(req.session.id_petugas, 'TAMBAH_ASRAMA', `Menambahkan asrama "${nilai.nama_asrama}" (#${hasil.insertId})`, 'ASRAMA');
     res.redirect('/asrama?msg=' + encodeURIComponent('Asrama berhasil ditambahkan.'));
 });
 
@@ -105,12 +110,11 @@ router.post('/asrama/:id', async (req, res) => {
     }
 
     await db.execute(
-        'UPDATE asrama SET nama_asrama = ?, keterangan = ? WHERE id_asrama = ?',
-        [nilai.nama_asrama, nilai.keterangan || null, id]
+        'UPDATE asrama SET nama_asrama = ?, pembimbing_asrama = ?, no_hp_pembimbing = ?, kapasitas = ?, keterangan = ? WHERE id_asrama = ?',
+        [nilai.nama_asrama, nilai.pembimbing_asrama || null, nilai.no_hp_pembimbing || null, nilai.kapasitas, nilai.keterangan || null, id]
     );
 
-    await logAktivitas(req.session.id_petugas, 'UBAH_ASRAMA',
-        `Mengubah asrama #${id} menjadi "${nilai.nama_asrama}"`);
+    await logAktivitas(req.session.id_petugas, 'UBAH_ASRAMA', `Mengubah asrama #${id} menjadi "${nilai.nama_asrama}"`, 'ASRAMA');
     res.redirect('/asrama?msg=' + encodeURIComponent('Asrama berhasil diubah.'));
 });
 
@@ -134,7 +138,7 @@ router.post('/asrama/:id/hapus', async (req, res) => {
         return res.redirect('/asrama?error=' + encodeURIComponent('Asrama tidak ditemukan.'));
     }
 
-    await logAktivitas(req.session.id_petugas, 'HAPUS_ASRAMA', `Menghapus asrama #${id}`);
+    await logAktivitas(req.session.id_petugas, 'HAPUS_ASRAMA', `Menghapus asrama #${id}`, 'ASRAMA');
     res.redirect('/asrama?msg=' + encodeURIComponent('Asrama berhasil dihapus.'));
 });
 

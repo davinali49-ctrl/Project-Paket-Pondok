@@ -25,6 +25,9 @@
                 <tr>
                     <th>No</th>
                     <th>Nama Asrama</th>
+                    <th>Pembimbing Asrama</th>
+                    <th>No. HP Pembimbing</th>
+                    <th>Kapasitas</th>
                     <th>Keterangan</th>
                     <th>Jumlah Santri</th>
                     <th>Aksi</th>
@@ -36,6 +39,9 @@
                         <tr>
                             <td><%= i + 1 %></td>
                             <td><strong><%= a.nama_asrama %></strong></td>
+                            <td><%= a.pembimbing_asrama ? a.pembimbing_asrama : '-' %></td>
+                            <td><%= a.no_hp_pembimbing ? a.no_hp_pembimbing : '-' %></td>
+                            <td><%= a.kapasitas ? a.kapasitas : '-' %></td>
                             <td><%= a.keterangan ? a.keterangan : '-' %></td>
                             <td><%= a.jumlah_santri %></td>
                             <td>
@@ -50,7 +56,7 @@
                     <% }) %>
                 <% } else { %>
                     <tr>
-                        <td colspan="5" style="text-align: center; color: #888;">Belum ada data asrama.</td>
+                        <td colspan="8" style="text-align: center; color: #888;">Belum ada data asrama.</td>
                     </tr>
                 <% } %>
             </tbody>
